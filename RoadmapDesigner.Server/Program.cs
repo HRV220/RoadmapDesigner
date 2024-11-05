@@ -1,18 +1,43 @@
+using Microsoft.EntityFrameworkCore;
+using RoadmapDesigner.Server.Models.Entity;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Получаем строку подключения из конфигурации
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+// Настройка службы базы данных
+builder.Services.AddDbContext<RoadmapDesignerContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// Настройка контроллеров
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Настройка Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Добавляем поддержку CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
+
 var app = builder.Build();
 
+app.UseCors("AllowAll"); // Используем CORS
+
+// Используем статические файлы
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Configure the HTTP request pipeline.
+// Конфигурация HTTP запросов
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -20,11 +45,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.MapFallbackToFile("/index.html");
 
 app.Run();
