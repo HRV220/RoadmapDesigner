@@ -23,7 +23,12 @@ namespace RoadmapDesigner.Server.Controllers
             return await users;
         }
 
-
+        [HttpGet("login")]
+        public IActionResult Login()
+        {
+            // Возвращает статический файл index.html, React будет обрабатывать это как страницу входа
+            return File("~/index.html", "text/html");
+        }
 
     }
 }
