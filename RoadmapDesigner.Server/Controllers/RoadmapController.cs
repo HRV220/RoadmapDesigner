@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoadmapDesigner.Server.Models.Entity;
+using RoadmapDesigner.Server.Models.EntityDTO;
+using Microsoft.Extensions.Logging;
 
 namespace RoadmapDesigner.Server.Controllers
 {
@@ -10,10 +13,12 @@ namespace RoadmapDesigner.Server.Controllers
     {
 
         private readonly RoadmapDesignerContext _context;
+        private readonly ILogger<RoadmapController> _logger;
 
-        public RoadmapController(RoadmapDesignerContext context)
+        public RoadmapController(RoadmapDesignerContext context, ILogger<RoadmapController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -22,11 +27,11 @@ namespace RoadmapDesigner.Server.Controllers
             var users = _context.Users.ToListAsync();
             return await users;
         }
+       
 
         [HttpGet("login")]
         public IActionResult Login()
         {
-            // Возвращает статический файл index.html, React будет обрабатывать это как страницу входа
             return File("~/index.html", "text/html");
         }
 

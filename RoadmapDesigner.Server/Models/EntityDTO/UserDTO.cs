@@ -1,8 +1,6 @@
-﻿using RoadmapDesigner.Server.Models.Entity;
-
-namespace RoadmapDesigner.Server.Models.ViewModel
+﻿namespace RoadmapDesigner.Server.Models.EntityDTO
 {
-    public class UserVM
+    public class UserDTO
     {
         public Guid UserId { get; set; }
 
@@ -19,11 +17,5 @@ namespace RoadmapDesigner.Server.Models.ViewModel
         public DateOnly CreatedDate { get; set; }
 
         public int RoleId { get; set; }
-
-        public virtual ICollection<Editor> Editors { get; set; } = new List<Editor>();
-
-        public virtual UserRole Role { get; set; } = null!;
-
-        public virtual ICollection<StudentProgram> StudentPrograms { get; set; } = new List<StudentProgram>();
     }
 }
