@@ -1,4 +1,6 @@
-﻿namespace RoadmapDesigner.Server.Models.EntityDTO
+﻿using RoadmapDesigner.Server.Models.Entity;
+
+namespace RoadmapDesigner.Server.Models.EntityDTO
 {
     public class UserDTO
     {
@@ -17,5 +19,19 @@
         public DateOnly CreatedDate { get; set; }
 
         public int RoleId { get; set; }
+
+        public UserDTO() { }
+
+        public UserDTO(User user)
+        {
+            UserId = user.UserId;
+            FirstName = user.FirstName;
+            SecondName = user.SecondName;
+            MiddleName = user.MiddleName;
+            Login = user.Login;
+            Email = user.Email;
+            CreatedDate = user.CreatedDate;
+            RoleId = user.RoleId;
+        }
     }
 }

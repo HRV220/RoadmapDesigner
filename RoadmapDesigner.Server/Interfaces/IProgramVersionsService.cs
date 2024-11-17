@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using RoadmapDesigner.Server.Models.EntityDTO;
 
-public interface IProgramVersionService
+public interface IProgramVersionsService
 {
     Task<IEnumerable<ProgramVersionDTO>> GetAllProgramVersionsAsync();
-    Task<ProgramVersionDetailDTO?> GetProgramVersionDetailsAsync(Guid programVersionId);
+    Task<ProgramVersionDTO?> GetProgramVersionDetailsAsync(Guid programVersionId);
 }

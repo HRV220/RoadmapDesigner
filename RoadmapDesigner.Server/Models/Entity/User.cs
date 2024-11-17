@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RoadmapDesigner.Server.Models.EntityDTO;
+using System;
 using System.Collections.Generic;
 
 namespace RoadmapDesigner.Server.Models.Entity;
@@ -26,4 +27,17 @@ public partial class User
     public virtual UserRole Role { get; set; } = null!;
 
     public virtual ICollection<StudentProgram> StudentPrograms { get; set; } = new List<StudentProgram>();
+
+    // В классе User
+    public void UpdateFromDTO(UserDTO userDto)
+    {
+        Login = userDto.Login;
+        FirstName = userDto.FirstName;
+        SecondName = userDto.SecondName;
+        MiddleName = userDto.MiddleName;
+        Email = userDto.Email;
+        CreatedDate = userDto.CreatedDate;
+        RoleId = userDto.RoleId;
+    }
+
 }

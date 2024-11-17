@@ -12,10 +12,10 @@ namespace RoadmapDesigner.Server.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IProgramVersionService _programVersionService;
+        private readonly IProgramVersionsService _programVersionService;
         private readonly ILogger<AdminController> _logger;
 
-        public AdminController(IUserService userService, IProgramVersionService programVersionService, ILogger<AdminController> logger)
+        public AdminController(IUserService userService, IProgramVersionsService programVersionService, ILogger<AdminController> logger)
         {
             _userService = userService;
             _programVersionService = programVersionService;
