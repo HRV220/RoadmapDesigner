@@ -16,47 +16,50 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProgramVersionsService, ProgramVersionsService>();
 builder.Services.AddScoped<IProgramVersionsRepository, ProgramVersionsRepository>();
+builder.Services.AddScoped<GitHubOAuthService>();
 
-builder.Services.AddHttpClient<OAuthService>();
+builder.Services.AddHttpClient<GitHubOAuthService>();
+builder.Services.AddControllers();
+
 
 
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = "TPU";
+    options.DefaultChallengeScheme = "GitHub";
 })
 .AddCookie()
-.AddOAuth("TPU", options =>
+.AddOAuth("GitHub", options =>
 {
-    options.ClientId = "ваш_client_id";
-    options.ClientSecret = "ваш_client_secret";
+    options.ClientId = "ваш_client_id"; // Укажите Client ID GitHub
+    options.ClientSecret = "ваш_client_secret"; // Укажите Client Secret GitHub
     options.CallbackPath = new PathString("/auth/callback");
 
-    options.AuthorizationEndpoint = "https://oauth.tpu.ru/authorize";
-    options.TokenEndpoint = "https://oauth.tpu.ru/access_token";
-    options.UserInformationEndpoint = "https://api.tpu.ru/v2/auth/user";
+    options.AuthorizationEndpoint = "https://github.com/login/oauth/authorize";
+    options.TokenEndpoint = "https://github.com/login/oauth/access_token";
+    options.UserInformationEndpoint = "https://api.github.com/user";
+
+    options.Scope.Add("user:email");
+
+    options.ClaimActions.MapJsonKey("urn:github:login", "login");
+    options.ClaimActions.MapJsonKey("urn:github:id", "id");
+    options.ClaimActions.MapJsonKey("urn:github:avatar", "avatar_url");
 
     options.SaveTokens = true;
-
-    options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "user_id");
-    options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
-    options.ClaimActions.MapJsonSubKey(ClaimTypes.Name, "lichnost", "imya");
-    options.ClaimActions.MapJsonSubKey("last_name", "lichnost", "familiya");
 
     options.Events = new OAuthEvents
     {
         OnCreatingTicket = async context =>
         {
-            // Получаем данные пользователя с UserInformationEndpoint
             var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
-            request.Headers.Add("apiKey", "ваш_api_key");
+            request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.AccessToken);
 
             var response = await context.Backchannel.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
-            var user = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
-            context.RunClaimActions(user);
+            var user = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            context.RunClaimActions(user.RootElement);
         }
     };
 });
@@ -106,35 +109,32 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.UseAuthentication();
 
-app.MapGet("/", async context =>
-{
-    if (context.User.Identity?.IsAuthenticated == true)
-    {
-        var name = context.User.FindFirst(ClaimTypes.Name)?.Value;
-        var email = context.User.FindFirst(ClaimTypes.Email)?.Value;
-        await context.Response.WriteAsync($"Привет, {name}! Ваш email: {email}");
-    }
-    else
-    {
-        await context.Response.WriteAsync("Вы не вошли в систему. <a href=\"/auth/login\">Войти</a>");
-    }
-});
-
+// Роуты для входа и выхода
 app.MapGet("/auth/login", async context =>
 {
-    await context.ChallengeAsync(
-        "TPU",
-        new AuthenticationProperties { RedirectUri = "/" });
+    await context.ChallengeAsync("GitHub");
 });
-
-
 
 app.MapGet("/auth/logout", async context =>
 {
     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-    context.Response.Redirect("https://oauth.tpu.ru/auth/logout?redirect=https://ваш_домен");
+    context.Response.Redirect("/");
 });
 
+app.MapGet("/", async context =>
+{
+    if (context.User.Identity?.IsAuthenticated ?? false)
+    {
+        var login = context.User.FindFirst("urn:github:login")?.Value;
+        var avatar = context.User.FindFirst("urn:github:avatar")?.Value;
+
+        await context.Response.WriteAsync($"<h1>Welcome {login}</h1><img src='{avatar}' />");
+    }
+    else
+    {
+        await context.Response.WriteAsync("<a href='/auth/login'>Login with GitHub</a>");
+    }
+});
 app.MapControllers();
 app.MapFallbackToFile("/index.html");
 
